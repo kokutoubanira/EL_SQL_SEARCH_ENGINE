@@ -1,0 +1,53 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+    build: ./elasticsearch
+    container_name: elasticsearch
+    environment:
+      TZ: 'Asia/Tokyo'
+      discovery.type: single-node
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  kibana:
+    build: ./kibana
+    container_name: kibana
+    environment: 
+        TZ: 'Asia/Tokyo'
+    ports:
+      - 5601:5601
+    networks:
+      - esnet
+
+  mysql:
+    build: ./mysql
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_USER: product
+      MYSQL_ROOT_PASSWORD: 1234
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 3306:3306
+      - 33060:33060
+
+  logstash:
+    build: ./logstash
+    container_name: logstash
+    ports:
+      - 5044:5044
+      - 9600:9600
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch:elasticsearch  
+    networks:
+      - esnet
+
+networks:
+  esnet:
