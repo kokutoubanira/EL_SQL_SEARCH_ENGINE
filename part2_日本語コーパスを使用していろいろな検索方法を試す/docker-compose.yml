@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  sql:
+    build: ./mysql
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: root
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 3306:3306
+      - 33060:33060
+    volumes: 
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - esnet
+
+  elasticsearch:
+    build: ./elasticsearch
+    container_name: elasticsearch
+    environment:
+      TZ: 'Asia/Tokyo'
+      discovery.type: single-node
+      XPACK_MONITORING_ENABLED: "false"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - esnet
+
+  logstash:
+    build: ./logstash
+    container_name: logstash
+    ports:
+      - 5044:5044
+      - 9600:9600
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch:elasticsearch 
+      - sql:sql
+    networks:
+      - esnet
+
+
+
+networks:
+  esnet:
