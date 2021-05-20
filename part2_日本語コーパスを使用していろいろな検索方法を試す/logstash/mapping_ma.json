@@ -1,0 +1,29 @@
+{
+    "template": "imdtablema",
+    "settings": {
+      "analysis": {
+
+        "analyzer": {
+          "my_kuromoji_analyzer_token": {
+            "type": "custom",
+            "tokenizer": "kuromoji_tokenizer",
+                      "filter": [
+              "kuromoji_stemmer"
+            ]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "id": {
+            "type": "integer"
+        },
+        "content": {
+          "type": "text",
+          "analyzer": "my_kuromoji_analyzer_token",
+                "search_analyzer": "my_kuromoji_analyzer_token"
+        }
+      }
+    }
+  }

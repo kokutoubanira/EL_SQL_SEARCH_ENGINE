@@ -5,3 +5,5 @@ RUN apt-get update \
     && locale-gen ja_JP.UTF-8 \
     && echo "export LANG=ja_JP.UTF-8" >> ~/.bashrc
 COPY ./initdb.d /docker-entrypoint-initdb.d
+RUN mkdir /var/log/mysql
+RUN chown mysql:mysql /var/log/mysql 
