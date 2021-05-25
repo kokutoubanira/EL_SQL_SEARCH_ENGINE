@@ -13,10 +13,8 @@
         "my_kuromoji_analyzer": {
           "type": "custom",
           "tokenizer": "kuromoji_tokenizer",
-                    "filter": [
-            "kuromoji_stemmer",
-            "my_ngram"
-          ]
+          "char_filter" : ["icu_normalizer"],
+          "filter": ["kuromoji_stemmer","my_ngram"]
         }
       }
     }

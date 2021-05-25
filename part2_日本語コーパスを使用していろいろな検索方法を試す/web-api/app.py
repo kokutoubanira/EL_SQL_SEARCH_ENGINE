@@ -3,11 +3,13 @@ from pprint import pprint
 
 from flask import Flask, render_template, jsonify, request
 from elasticsearch import Elasticsearch
-from bert_serving.client import BertClient
-SEARCH_SIZE = 10
-INDEX_NAME = os.environ['INDEX_NAME']
+import json
+
+SEARCH_SIZE = 100
+
 app = Flask(__name__)
 
+es = Elasticsearch('elasticsearch:9200')
 
 @app.route('/')
 def index():
@@ -16,33 +18,70 @@ def index():
 
 @app.route('/search')
 def analyzer():
-    bc = BertClient(ip='bertserving', output_fmt='list')
-    client = Elasticsearch('elasticsearch:9200')
-
     query = request.args.get('q')
-    query_vector = bc.encode([query])[0]
 
-    script_query = {
-        "script_score": {
-            "query": {"match_all": {}},
-            "script": {
-                "source": "cosineSimilarity(params.query_vector, doc['text_vector']) + 1.0",
-                "params": {"query_vector": query_vector}
+    body_ngram = {
+        "query" : {
+            "match" : {
+                "content": {
+                "query": query,
+                "operator": "or",
+                "fuzziness" : "AUTO",
+                "prefix_length" : 1,
+                "boost": 1.3
+                }
             }
-        }
+        },
+        "_source" : ["_score", "id", "content"],
+        "from": 0,
+        "size": 1000
     }
 
-    response = client.search(
-        index=INDEX_NAME,
-        body={
-            "size": SEARCH_SIZE,
-            "query": script_query,
-            "_source": {"includes": ["title", "text"]}
-        }
-    )
+    res = es.search(index="imdtablema", body=body_ngram)
+    tmp_list = []
+    id_list = {}
+    count = 0
+    for hit in res['hits']['hits']:
+        s_dict = {}
+        s_dict["id"] = hit['_source']['id']
+        s_dict["score"] = hit['_score']
+        s_dict["content"] = hit['_source']['content']
+        id_list[hit['_source']['id']] = count
+        count += 1
+        tmp_list.append(s_dict)
+
+    body_ma = {
+        "query" : {
+            "match" : {
+                "content": {
+                "query": query,
+                "operator": "or",
+                "fuzziness" : "AUTO",
+                "prefix_length" : 1
+                }
+            }
+        },
+        "_source" : ["_score", "id", "content"],
+        "from": 0,
+        "size": 1000
+    }
+
+    res = es.search(index="imdtablengram", body=body_ma)
+    for hit in res['hits']['hits']:
+        if hit['_source']['id'] in id_list.keys():
+            tmp_list[id_list[hit['_source']['id']]]["score"] = tmp_list[id_list[hit['_source']['id']]]["score"] + hit['_score']
+        else :
+            s_dict = {}
+            s_dict["id"] = hit['_source']['id']
+            s_dict["score"] = hit['_score']
+            s_dict["content"] = hit['_source']['content']
+            id_list[hit['_source']['id']] = count
+            count += 1
+            tmp_list.append(s_dict)
+    # return jsonify(res)
     print(query)
-    pprint(response)
-    return jsonify(response)
+    #res_merge = json.dumps({"hits":sorted(tmp_list, key=lambda x: x['score'], reverse=True)}, indent=2, ensure_ascii=False)
+    return jsonify({"hits":sorted(tmp_list, key=lambda x: x['score'], reverse=True)})
 
 
 if __name__ == '__main__':

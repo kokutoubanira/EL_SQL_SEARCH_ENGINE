@@ -39,6 +39,8 @@ services:
     ports:
       - 5044:5044
       - 9600:9600
+    environment: 
+      TZ: 'Asia/Tokyo'
     depends_on:
       - elasticsearch
     links:
@@ -56,6 +58,18 @@ services:
       - 5601:5601
     depends_on:
       - logstash
+    networks:
+      - esnet
+
+  web-api:
+    build: ./web-api
+    container_name: web-api
+    environment: 
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 5000:5000
+    links:
+      - elasticsearch:elasticsearch
     networks:
       - esnet
 

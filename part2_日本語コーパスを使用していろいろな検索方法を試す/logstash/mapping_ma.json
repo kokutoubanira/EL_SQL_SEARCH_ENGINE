@@ -7,9 +7,8 @@
           "my_kuromoji_analyzer_token": {
             "type": "custom",
             "tokenizer": "kuromoji_tokenizer",
-                      "filter": [
-              "kuromoji_stemmer"
-            ]
+            "char_filter" : ["icu_normalizer"],
+              "filter": ["kuromoji_stemmer"]
           }
         }
       }

@@ -23,7 +23,7 @@
       <v-app-bar app color="blue darken-3" dark>
         <v-col cols="1">
           <v-toolbar-title class="ml-0 pl-4">
-            <span class="hidden-sm-and-down">BERT Search</span>
+            <span class="hidden-sm-and-down">Search</span>
           </v-toolbar-title>
         </v-col>
         <v-col cols="5">
@@ -36,9 +36,9 @@
         <v-row class="ml-0">
           <v-col cols="12" md="6" offset-md="1" offset-lg="1" offset-xl="1">
             <template v-if="'hits' in result">
-              <v-card max-width="700" flat v-for="(item, index) in result.hits.hits" :key="index">
-                <v-card-title>[[ item._source.title ]]</v-card-title>
-                <v-card-text>[[ item._source.text.slice(0, 300) ]]...</v-card-text>
+              <v-card max-width="700" flat v-for="(item, index) in result.hits" :key="index">
+                <v-card-title>[[ item.id ]]</v-card-title>
+                <v-card-text>[[ item.content.slice(0, 300) ]]...</v-card-text>
                 <!--
                 <v-card-actions>
                   <v-chip class="primary">[[ item._score ]]</v-chip>
