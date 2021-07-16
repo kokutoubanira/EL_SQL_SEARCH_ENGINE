@@ -1,0 +1,45 @@
+{
+  "template": "imdtable",
+  "settings": {
+    "analysis": {
+      "filter": {
+        "my_ngram": {
+          "type": "ngram",
+          "min_gram": 2,
+          "max_gram": 3
+        }
+      },
+      "analyzer": {
+        "my_kuromoji_analyzer_ngram": {
+          "type": "custom",
+          "tokenizer": "kuromoji_tokenizer",
+          "char_filter" : ["icu_normalizer"],
+          "filter": ["kuromoji_stemmer","my_ngram"]
+        },
+        "my_kuromoji_analyzer_token": {
+          "type": "custom",
+          "tokenizer": "kuromoji_tokenizer",
+          "char_filter" : ["icu_normalizer"],
+            "filter": ["kuromoji_stemmer"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+          "type": "integer"
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "my_kuromoji_analyzer_ngram",
+              "search_analyzer": "my_kuromoji_analyzer_ngram"
+      },
+      "content_ma": {
+        "type": "text",
+        "analyzer": "my_kuromoji_analyzer_token",
+              "search_analyzer": "my_kuromoji_analyzer_token"
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+version: '3.7'
+
+services:
+  sql:
+    build: ./mysql
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: root
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 3306:3306
+      - 33060:33060
+    volumes: 
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - key-esnet
+
+  elasticsearch:
+    build: ./elasticsearch
+    container_name: elasticsearch
+    environment:
+      TZ: 'Asia/Tokyo'
+      discovery.type: single-node
+      XPACK_MONITORING_ENABLED: "false"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    depends_on:
+      - sql  
+    networks:
+      - key-esnet
+
+  logstash:
+    build: ./logstash
+    container_name: logstash
+    ports:
+      - 5044:5044
+      - 9600:9600
+    environment: 
+      TZ: 'Asia/Tokyo'
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch:elasticsearch 
+      - sql:sql
+    networks:
+      - key-esnet
+
+  klogstash:
+    build: ./logstash
+    container_name: klogstash
+    ports:
+      - 5045:5044
+      - 9601:9600
+    environment: 
+      TZ: 'Asia/Tokyo'
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch:elasticsearch 
+      - sql:sql
+    networks:
+      - key-esnet
+
+  kibana:
+    build: ./kibana
+    container_name: kibana
+    environment: 
+        TZ: 'Asia/Tokyo'
+    ports:
+      - 5601:5601
+    depends_on:
+      - logstash
+    networks:
+      - key-esnet
+
+  web-api:
+    build: ./web-api
+    container_name: web-api
+    environment: 
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 5000:5000
+    links:
+      - elasticsearch:elasticsearch
+    networks:
+      - key-esnet
+
+networks:
+  esnet:
